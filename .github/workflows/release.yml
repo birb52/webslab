@@ -29,9 +29,14 @@ jobs:
           sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
 
       - name: Build and Package
-        # This installs cargo-packager and runs it
         run: |
+          # 1. Install the packager
           cargo install cargo-packager --locked
+          
+          # 2. MANUALLY build the binary first to ensure it exists
+          cargo build --release
+          
+          # 3. Run the packager
           cargo packager --release ${{ matrix.args }}
 
       - name: Upload Artifacts
