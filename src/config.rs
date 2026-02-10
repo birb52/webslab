@@ -1,7 +1,7 @@
-use serde::Deserialize;
-use std::{error::Error, fs};
+use serde::{Deserialize, Serialize};
+use std::error::Error;
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Default, Serialize)]
 pub struct Config {
     pub start_url: String,
     pub search_url: String,
@@ -13,7 +13,23 @@ pub struct Config {
 
 impl Config {
     pub fn load() -> Result<Self, Box<dyn Error>> {
-        let data = fs::read_to_string("config.toml")?;
+        // Look in:
+        // Windows: %AppData%/webslab/config.toml
+        // Linux: ~/.config/webslab/config.toml
+        let config_dir = dirs::config_dir()
+            .ok_or("Could not find config directory")?
+            .join("webslab");
+
+        let config_path = config_dir.join("config.toml");
+
+        if !config_path.exists() {
+            // Create the directory and a default config if it doesn't exist
+            std::fs::create_dir_all(&config_dir)?;
+            let default_config = toml::to_string(&Config::default())?;
+            std::fs::write(&config_path, default_config)?;
+        }
+
+        let data = std::fs::read_to_string(config_path)?;
         Ok(toml::from_str(&data)?)
     }
 }

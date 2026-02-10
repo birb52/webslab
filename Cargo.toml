@@ -13,6 +13,7 @@ url = "2.5"
 # Configuration and Serialization
 serde = { version = "1.0", features = ["derive"] }
 toml = "0.8"
+dirs = "5.0"
 
 # Image handling for the window icon
 image = "0.25"
@@ -23,3 +24,22 @@ lto = true
 codegen-units = 1
 panic = 'abort'
 strip = true
+
+[package.metadata.packager]
+product_name = "webslab"
+identifier = "com.yourname.webslab"
+version = "0.1.0"
+authors = ["Your Name"]
+description = "Minimalist tiling browser"
+binaries = [
+  { path = "webslab", main = true }
+]
+
+[package.metadata.packager.windows]
+formats = ["msi"]
+
+[package.metadata.packager.linux]
+formats = ["deb"]
+
+[package.metadata.packager.macos]
+formats = ["app", "dmg"]
