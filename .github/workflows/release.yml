@@ -10,10 +10,10 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - platform: 'windows-latest'
-            args: '--formats msi'
-          - platform: 'ubuntu-22.04'
-            args: '--formats deb'
+        - platform: 'windows-latest'
+          args: '--formats msi'
+        - platform: 'ubuntu-22.04'
+          args: '--formats deb'
 
     runs-on: ${{ matrix.platform }}
     steps:

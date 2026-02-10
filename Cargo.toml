@@ -29,17 +29,12 @@ strip = true
 product_name = "webslab"
 identifier = "com.yourname.webslab"
 version = "0.1.0"
-authors = ["Your Name"]
+authors = ["duckd"]
 description = "Minimalist tiling browser"
 binaries = [
   { path = "webslab", main = true }
 ]
 
 [package.metadata.packager.windows]
-formats = ["msi"]
 
 [package.metadata.packager.linux]
-formats = ["deb"]
-
-[package.metadata.packager.macos]
-formats = ["app", "dmg"]
