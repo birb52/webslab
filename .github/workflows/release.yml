@@ -11,9 +11,9 @@ jobs:
       matrix:
         include:
           - platform: 'windows-latest'
-            args: '--format msi'
+            args: '--formats msi'
           - platform: 'ubuntu-22.04'
-            args: '--format deb'
+            args: '--formats deb'
 
     runs-on: ${{ matrix.platform }}
     steps:
