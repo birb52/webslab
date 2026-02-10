@@ -1,5 +1,5 @@
 use std::error::Error;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use tao::{
     event::{Event, WindowEvent},
     event_loop::{ControlFlow, EventLoop},
@@ -12,6 +12,10 @@ use config::Config;
 
 mod icon;
 use crate::icon::load_icon;
+
+fn webview_data_directory() -> Option<PathBuf> {
+    dirs::data_local_dir().map(|path| path.join("webslab").join("webview2"))
+}
 
 fn main() -> Result<(), Box<dyn Error>> {
     let config = Config::load()?;
@@ -52,10 +56,16 @@ fn main() -> Result<(), Box<dyn Error>> {
         config.search_url
     );
 
-    let _webview = WebViewBuilder::new()
+    let mut webview_builder = WebViewBuilder::new()
         .with_url(&start_url)
-        .with_initialization_script(&initialization_script)
-        .build(&window)?;
+        .with_initialization_script(&initialization_script);
+
+    if let Some(data_dir) = webview_data_directory() {
+        std::fs::create_dir_all(&data_dir)?;
+        webview_builder = webview_builder.with_data_directory(data_dir);
+    }
+
+    let _webview = webview_builder.build(&window)?;
 
     event_loop.run(move |event, _, control_flow| {
         *control_flow = ControlFlow::Wait;
