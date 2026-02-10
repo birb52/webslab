@@ -1,0 +1,6 @@
+start_url = "assets/index.html"
+search_url = "https://www.google.com/search?q="
+icon = "assets/icon.png"
+frameless = true
+transparent = true
+always_on_top = true

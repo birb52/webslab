@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>webslab</title>
+  <style>
+    html, body {
+      margin: 0; padding: 0;
+      background: transparent;
+      overflow: hidden;
+    }
+    input {
+      width: 100%; height: 100vh;
+      font-size: 24px; padding: 0 20px;
+      border: none; outline: none;
+      background: rgba(25, 25, 25, 0.95);
+      color: white; box-sizing: border-box;
+    }
+  </style>
+</head>
+<body>
+  <input id="omnibox" autofocus placeholder="Search or type URL..." />
+
+  <script>
+    const input = document.getElementById("omnibox");
+
+    function looksLikeUrl(text) {
+      return /^[a-zA-Z]+:\/\//.test(text) || /^[^\s]+\.[^\s]+/.test(text);
+    }
+
+    input.addEventListener("keydown", (e) => {
+      if (e.key !== "Enter") return;
+      const query = input.value.trim();
+      if (!query) return;
+
+      if (looksLikeUrl(query)) {
+        location.href = query.includes("://") ? query : "https://" + query;
+      } else {
+        const q = encodeURIComponent(query);
+        // Use injected SEARCH_URL from config.toml
+        const searchBase = window.SEARCH_URL || "https://www.google.com/search?q=";
+        location.href = `${searchBase}${q}`;
+      }
+    });
+  </script>
+</body>
+</html>

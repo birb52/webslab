@@ -1,0 +1,36 @@
+# Rust
+target/
+Cargo.lock
+**/*.rs.bk
+*.pdb
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# WebView2
+**/WebView2/
+
+# Build artifacts
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Debug logs
+*.log
+
+# Temporary files
+*.tmp
+*.temp
+
+# Local configuration files (if any)
+local_config.toml
+.env
