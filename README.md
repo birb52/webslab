@@ -32,18 +32,26 @@ Ensure you have the required dependencies for `wry` installed on your system (es
     ```bash
     cargo build --release
     ```
-    Create a config.toml in the project root.
 
 ## Configuration
 
-Create a config.toml file to customize the behavior:
+The application automatically creates a configuration file on first run. The config file location depends on your operating system:
 
-    start_url = "index.html" # Can be a local file or a URL like "[https://google.com](https://google.com)"
-    search_url = "[https://www.google.com/search?q=](https://www.google.com/search?q=)"
-    icon = "assets/icon.png" # Optional
-    frameless = true
-    transparent = true
-    always_on_top = false
+- **Windows**: `%APPDATA%\Roaming\webslab\config.toml`
+- **Linux**: `~/.config/webslab/config.toml`
+- **macOS**: `~/Library/Application Support/webslab/config.toml`
+
+The default configuration includes:
+```toml
+start_url = ""                    # Empty defaults to assets/index.html
+search_url = ""                   # Custom search engine URL
+icon = "assets/icon.png"          # Window icon path
+frameless = true                  # Remove window decorations
+transparent = true                # Transparent window background
+always_on_top = false             # Keep window on top
+```
+
+You can customize these settings by editing the config file after it's created.
 
 ## Usage
 
