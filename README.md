@@ -23,7 +23,7 @@ Ensure you have the required dependencies for `wry` installed on your system (es
 
 1. Clone the repository:
    ```bash
-   git clone [https://github.com/your-username/webslab.git](https://github.com/your-username/webslab.git)
+   git clone [https://github.com/birb52/webslab.git](https://github.com/birb52/webslab.git)
 
    cd webslab
    ```
