@@ -5,17 +5,12 @@ edition = "2021"
 description = "A minimalist webview-based browser for tiling window managers."
 
 [dependencies]
-# Windowing and WebView
-tao = "0.30"
-wry = "0.47"
+wry = "0.54.1"
+tao = "0.31"
+dirs = "5.0"
 url = "2.5"
-
-# Configuration and Serialization
 serde = { version = "1.0", features = ["derive"] }
 toml = "0.8"
-dirs = "5.0"
-
-# Image handling for the window icon
 image = "0.25"
 
 [profile.release]
@@ -27,9 +22,9 @@ strip = true
 
 [package.metadata.packager]
 product_name = "webslab"
-identifier = "com.yourname.webslab"
+identifier = "com.sathvikd.webslab"
 version = "0.1.0"
-authors = ["duckd"]
+authors = ["sathvikd"]
 description = "Minimalist tiling browser"
 binaries = [
   { path = "webslab", main = true }

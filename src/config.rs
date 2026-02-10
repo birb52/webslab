@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use std::error::Error;
 
-#[derive(Debug, Deserialize, Default, Serialize)]
+#[derive(Debug, Deserialize, Serialize)]
 pub struct Config {
     pub start_url: String,
     pub search_url: String,
@@ -9,6 +9,19 @@ pub struct Config {
     pub frameless: bool,
     pub transparent: bool,
     pub always_on_top: bool,
+}
+
+impl Default for Config {
+    fn default() -> Self {
+        Self {
+            start_url: String::new(),
+            search_url: String::new(),
+            icon: Some("assets/icon.png".to_string()),
+            frameless: false,
+            transparent: false,
+            always_on_top: false,
+        }
+    }
 }
 
 impl Config {

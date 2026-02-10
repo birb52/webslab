@@ -1,5 +1,5 @@
 use std::error::Error;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 use tao::{
     event::{Event, WindowEvent},
     event_loop::{ControlFlow, EventLoop},
@@ -13,14 +13,12 @@ use config::Config;
 mod icon;
 use crate::icon::load_icon;
 
-fn webview_data_directory() -> Option<PathBuf> {
-    dirs::data_local_dir().map(|path| path.join("webslab").join("webview2"))
-}
-
 fn main() -> Result<(), Box<dyn Error>> {
+    // 1. Load Config (Requires serde)
     let config = Config::load()?;
     let event_loop = EventLoop::new();
 
+    // 2. Setup Window with Icon logic
     let mut window_builder = WindowBuilder::new()
         .with_title("webslab")
         .with_decorations(!config.frameless)
@@ -35,8 +33,8 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     let window = window_builder.build(&event_loop)?;
     
-    // FIX: Canonicalize path then strip the Windows UNC prefix if present
-    let start_url = if Path::new(&config.start_url).exists() {
+    // 3. URL Logic
+    let start_url = if !config.start_url.is_empty() && Path::new(&config.start_url).exists() {
         let abs_path = std::fs::canonicalize(&config.start_url)?;
         let path_str = abs_path.to_string_lossy();
         let clean_path = path_str.strip_prefix(r"\\?\").unwrap_or(&path_str);
@@ -44,26 +42,29 @@ fn main() -> Result<(), Box<dyn Error>> {
         url::Url::from_file_path(clean_path)
             .map(|u| u.to_string())
             .unwrap_or_else(|_| "about:blank".to_string())
-    } else {
+    } else if !config.start_url.is_empty() {
         config.start_url.clone()
+    } else {
+        // Default to local index.html in assets directory
+        let assets_path = std::env::current_dir()?.join("assets").join("index.html");
+        if assets_path.exists() {
+            url::Url::from_file_path(&assets_path)
+                .map(|u| u.to_string())
+                .unwrap_or_else(|_| "about:blank".to_string())
+        } else {
+            "about:blank".to_string()
+        }
     };
 
-    println!("Loading: {}", start_url);
-
-    // Pass the search_url from config.toml into the WebView's JavaScript context
     let initialization_script = format!(
         "window.SEARCH_URL = '{}';", 
         config.search_url
     );
 
-    let mut webview_builder = WebViewBuilder::new()
+    // 4. WebView Builder
+    let webview_builder = WebViewBuilder::new()
         .with_url(&start_url)
         .with_initialization_script(&initialization_script);
-
-    if let Some(data_dir) = webview_data_directory() {
-        std::fs::create_dir_all(&data_dir)?;
-        webview_builder = webview_builder.with_data_directory(data_dir);
-    }
 
     let _webview = webview_builder.build(&window)?;
 
