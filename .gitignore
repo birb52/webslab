@@ -34,3 +34,4 @@ Thumbs.db
 # Local configuration files (if any)
 local_config.toml
 .env
+publish.sh

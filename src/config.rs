@@ -9,6 +9,9 @@ pub struct Config {
     pub frameless: bool,
     pub transparent: bool,
     pub always_on_top: bool,
+    pub adblocker_enabled: bool,
+    pub adblocker_whitelist: Option<Vec<String>>,
+    pub adblocker_blacklist: Option<Vec<String>>,
 }
 
 impl Default for Config {
@@ -20,6 +23,9 @@ impl Default for Config {
             frameless: false,
             transparent: false,
             always_on_top: false,
+            adblocker_enabled: true,
+            adblocker_whitelist: None,
+            adblocker_blacklist: None,
         }
     }
 }

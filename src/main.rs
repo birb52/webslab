@@ -5,15 +5,14 @@ use tao::{
     window::WindowBuilder,
 };
 use wry::WebViewBuilder;
-
 #[cfg(target_os = "linux")]
 use gtk::prelude::*;
-
 mod config;
 use config::Config;
-
 mod icon;
 use crate::icon::load_icon;
+mod adblocker;
+use crate::adblocker::get_adblocker_script;
 
 fn main() {
     // 1. Load Config (Requires serde)
@@ -65,9 +64,40 @@ fn main() {
         }
     };
 
+    let adblocker_script = get_adblocker_script(
+        config.adblocker_enabled,
+        &config.adblocker_whitelist,
+        &config.adblocker_blacklist
+    );
+
     let initialization_script = format!(
-        "window.SEARCH_URL = '{}';", 
-        config.search_url
+        "window.SEARCH_URL = '{}';
+        
+        // Add keyboard shortcuts
+        document.addEventListener('keydown', function(e) {{
+            if (e.ctrlKey) {{
+                switch(e.key.toLowerCase()) {{
+                    case 'h':
+                        e.preventDefault();
+                        alert('Shortcuts:\\nCtrl+H - Show this menu\\nCtrl+F - Go forward\\nCtrl+B - Go back\\nCtrl+R - Reload page');
+                        break;
+                    case 'f':
+                        e.preventDefault();
+                        history.forward();
+                        break;
+                    case 'b':
+                        e.preventDefault();
+                        history.back();
+                        break;
+                    case 'r':
+                        e.preventDefault();
+                        location.reload();
+                        break;
+                }}
+            }}
+        }});{}",
+        config.search_url,
+        adblocker_script
     );
 
     // 4. WebView Builder
@@ -86,8 +116,16 @@ fn main() {
             let _ = gtk::main_iteration_do(false);
         }
         
-        if let Event::WindowEvent { event: WindowEvent::CloseRequested, .. } = event {
-            *control_flow = ControlFlow::Exit;
+        match event {
+            Event::WindowEvent { event, .. } => {
+                match event {
+                    WindowEvent::CloseRequested => {
+                        *control_flow = ControlFlow::Exit;
+                    }
+                    _ => {}
+                }
+            }
+            _ => {}
         }
     });
 }
