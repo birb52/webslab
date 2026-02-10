@@ -59,8 +59,9 @@ Once built, you can run the binary:
 ``` bash
 ./target/release/webslab
 ```
+You can use ```ctrl + h``` for the keyboard shortcuts popup guide.
 
-The default index.html acts as your "New Tab" page. Type a URL to navigate or a search term to use the search engine defined in your script.
+The default ```index.html``` acts as your "New Tab" page. Type a URL to navigate or a search term to use the search engine defined in your script.
 
 ## Contributing
 
