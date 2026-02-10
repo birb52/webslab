@@ -1,4 +1,3 @@
-use std::error::Error;
 use std::path::Path;
 use tao::{
     event::{Event, WindowEvent},
@@ -7,15 +6,25 @@ use tao::{
 };
 use wry::WebViewBuilder;
 
+#[cfg(target_os = "linux")]
+use gtk::prelude::*;
+
 mod config;
 use config::Config;
 
 mod icon;
 use crate::icon::load_icon;
 
-fn main() -> Result<(), Box<dyn Error>> {
+fn main() {
     // 1. Load Config (Requires serde)
-    let config = Config::load()?;
+    let config = Config::load().expect("Failed to load config");
+
+    #[cfg(target_os = "linux")]
+    {
+        // Initialize GTK
+        gtk::init().expect("Failed to initialize GTK");
+    }
+
     let event_loop = EventLoop::new();
 
     // 2. Setup Window with Icon logic
@@ -31,11 +40,11 @@ fn main() -> Result<(), Box<dyn Error>> {
         }
     }
 
-    let window = window_builder.build(&event_loop)?;
+    let window = window_builder.build(&event_loop).expect("Failed to create window");
     
     // 3. URL Logic
     let start_url = if !config.start_url.is_empty() && Path::new(&config.start_url).exists() {
-        let abs_path = std::fs::canonicalize(&config.start_url)?;
+        let abs_path = std::fs::canonicalize(&config.start_url).expect("Failed to canonicalize path");
         let path_str = abs_path.to_string_lossy();
         let clean_path = path_str.strip_prefix(r"\\?\").unwrap_or(&path_str);
         
@@ -46,7 +55,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         config.start_url.clone()
     } else {
         // Default to local index.html in assets directory
-        let assets_path = std::env::current_dir()?.join("assets").join("index.html");
+        let assets_path = std::env::current_dir().expect("Failed to get current directory").join("assets").join("index.html");
         if assets_path.exists() {
             url::Url::from_file_path(&assets_path)
                 .map(|u| u.to_string())
@@ -66,10 +75,17 @@ fn main() -> Result<(), Box<dyn Error>> {
         .with_url(&start_url)
         .with_initialization_script(&initialization_script);
 
-    let _webview = webview_builder.build(&window)?;
+    let _webview = webview_builder.build(&window).expect("Failed to create webview");
 
     event_loop.run(move |event, _, control_flow| {
         *control_flow = ControlFlow::Wait;
+        
+        // Advance GTK event loop on Linux
+        #[cfg(target_os = "linux")]
+        while gtk::events_pending() {
+            let _ = gtk::main_iteration_do(false);
+        }
+        
         if let Event::WindowEvent { event: WindowEvent::CloseRequested, .. } = event {
             *control_flow = ControlFlow::Exit;
         }
