@@ -4,11 +4,12 @@ use std::path::Path;
 use tao::{
     event::{Event, WindowEvent},
     event_loop::{ControlFlow, EventLoop},
+    platform::unix::WindowExtUnix,
     window::WindowBuilder,
 };
-use wry::WebViewBuilder;
+use wry::{WebViewBuilder, WebViewBuilderExtUnix};
 #[cfg(target_os = "linux")]
-use gtk::prelude::*;
+use gtk;
 mod config;
 use config::Config;
 mod icon;
@@ -22,7 +23,8 @@ fn main() {
 
     #[cfg(target_os = "linux")]
     {
-        // Initialize GTK
+        std::env::set_var("GDK_BACKEND", "x11");
+        std::env::set_var("WEBKIT_DISABLE_DMABUF_RENDERER", "1");
         gtk::init().expect("Failed to initialize GTK");
     }
 
@@ -44,25 +46,24 @@ fn main() {
     let window = window_builder.build(&event_loop).expect("Failed to create window");
     
     // 3. URL Logic
-    let start_url = if !config.start_url.is_empty() && Path::new(&config.start_url).exists() {
+    let (start_url, initial_html): (String, Option<String>) = if !config.start_url.is_empty() && Path::new(&config.start_url).exists() {
         let abs_path = std::fs::canonicalize(&config.start_url).expect("Failed to canonicalize path");
         let path_str = abs_path.to_string_lossy();
         let clean_path = path_str.strip_prefix(r"\\?\").unwrap_or(&path_str);
         
-        url::Url::from_file_path(clean_path)
+        let url = url::Url::from_file_path(clean_path)
             .map(|u| u.to_string())
-            .unwrap_or_else(|_| "about:blank".to_string())
+            .unwrap_or_else(|_| "about:blank".to_string());
+        (url, None)
     } else if !config.start_url.is_empty() {
-        config.start_url.clone()
+        (config.start_url.clone(), None)
     } else {
-        // Default to local index.html in assets directory
         let assets_path = std::env::current_dir().expect("Failed to get current directory").join("assets").join("index.html");
         if assets_path.exists() {
-            url::Url::from_file_path(&assets_path)
-                .map(|u| u.to_string())
-                .unwrap_or_else(|_| "about:blank".to_string())
+            let html = std::fs::read_to_string(&assets_path).expect("Failed to read index.html");
+            ("about:blank".to_string(), Some(html))
         } else {
-            "about:blank".to_string()
+            ("about:blank".to_string(), None)
         }
     };
 
@@ -73,41 +74,30 @@ fn main() {
     );
 
     let initialization_script = format!(
-        "window.SEARCH_URL = '{}';
-        
-        // Add keyboard shortcuts
-        document.addEventListener('keydown', function(e) {{
-            if (e.ctrlKey) {{
-                switch(e.key.toLowerCase()) {{
-                    case 'h':
-                        e.preventDefault();
-                        alert('Shortcuts:\\nCtrl+H - Show this menu\\nCtrl+F - Go forward\\nCtrl+B - Go back\\nCtrl+R - Reload page');
-                        break;
-                    case 'f':
-                        e.preventDefault();
-                        history.forward();
-                        break;
-                    case 'b':
-                        e.preventDefault();
-                        history.back();
-                        break;
-                    case 'r':
-                        e.preventDefault();
-                        location.reload();
-                        break;
-                }}
-            }}
-        }});{}",
+        "window.SEARCH_URL = '{}';{}",
         config.search_url,
         adblocker_script
     );
 
     // 4. WebView Builder
-    let webview_builder = WebViewBuilder::new()
-        .with_url(&start_url)
-        .with_initialization_script(&initialization_script);
+    let webview_builder = if let Some(html) = initial_html {
+        WebViewBuilder::new().with_html(&html)
+    } else {
+        WebViewBuilder::new().with_url(&start_url)
+    }
+    .with_initialization_script(&initialization_script);
 
-    let _webview = webview_builder.build(&window).expect("Failed to create webview");
+    let _webview = {
+        #[cfg(target_os = "linux")]
+        {
+            let vbox = window.default_vbox().expect("default vbox should exist");
+            webview_builder.build_gtk(vbox).expect("Failed to create webview")
+        }
+        #[cfg(not(target_os = "linux"))]
+        {
+            webview_builder.build(&window).expect("Failed to create webview")
+        }
+    };
 
     event_loop.run(move |event, _, control_flow| {
         *control_flow = ControlFlow::Wait;

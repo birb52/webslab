@@ -22,25 +22,28 @@
   <input id="omnibox" autofocus placeholder="Search or type URL..." />
 
   <script>
-    const input = document.getElementById("omnibox");
+    document.addEventListener('DOMContentLoaded', function() {
+      const input = document.getElementById("omnibox");
+      if (!input) return;
 
-    function looksLikeUrl(text) {
-      return /^[a-zA-Z]+:\/\//.test(text) || /^[^\s]+\.[^\s]+/.test(text);
-    }
-
-    input.addEventListener("keydown", (e) => {
-      if (e.key !== "Enter") return;
-      const query = input.value.trim();
-      if (!query) return;
-
-      if (looksLikeUrl(query)) {
-        location.href = query.includes("://") ? query : "https://" + query;
-      } else {
-        const q = encodeURIComponent(query);
-        // Use injected SEARCH_URL from config.toml
-        const searchBase = window.SEARCH_URL || "https://www.google.com/search?q=";
-        location.href = `${searchBase}${q}`;
+      function looksLikeUrl(text) {
+        return /^[a-zA-Z]+:\/\//.test(text) || /^[^\s]+\.[^\s]+/.test(text);
       }
+
+      input.addEventListener("keydown", (e) => {
+        if (e.key !== "Enter") return;
+        const query = input.value.trim();
+        if (!query) return;
+
+        if (looksLikeUrl(query)) {
+          const target = query.includes("://") ? query : "https://" + query;
+          window.location.assign(target);
+        } else {
+          const q = encodeURIComponent(query);
+          const searchBase = window.SEARCH_URL || "https://www.google.com/search?q=";
+          window.location.assign(`${searchBase}${q}`);
+        }
+      });
     });
   </script>
 </body>
